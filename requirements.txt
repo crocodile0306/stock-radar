@@ -2,4 +2,3 @@ streamlit
 akshare
 pandas
 numpy
-requests
