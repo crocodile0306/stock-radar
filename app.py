@@ -31,13 +31,18 @@ def analyze_stock(stock):
         today = df.iloc[-1]
         reasons = []
         
-        body = abs(today['收盘'] - today['开盘'])
+       body = abs(today['收盘'] - today['开盘'])
         total_len = today['最高'] - today['最低'] + 0.00001 
         upper_shadow = today['最高'] - max(today['收盘'], today['开盘'])
         
-        # 高敏度风控逻辑：满足 1 个就报警
-        if (today['收盘'] < today['开盘'] and body/total_len > 0.7) or (upper_shadow > body * 2):
-            reasons.append("K线见顶(大阴/长上影)")
+        # 改进1：真正的大阴线（实体占全天振幅70%以上，且全天振幅大于1%）
+        is_big_drop = (today['收盘'] < today['开盘']) and (body / total_len > 0.7) and (total_len / today['开盘'] > 0.01)
+        
+        # 改进2：真正的致命长上影（上影线大于实体2倍，且上影线长度必须大于股价的 1.5%）
+        is_long_shadow = (upper_shadow > body * 2) and (upper_shadow / today['开盘'] > 0.015)
+        
+        if is_big_drop or is_long_shadow:
+            reasons.append("K线破位(大阴线/长上影)")
         if today['MFI'] > 80: 
             reasons.append(f"资金过热(MFI:{today['MFI']:.1f})")
         if today['最高'] > today['UPPER'] and today['收盘'] < today['UPPER']:
