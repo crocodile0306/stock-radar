@@ -31,7 +31,8 @@ def analyze_stock(stock):
         today = df.iloc[-1]
         reasons = []
         
-       body = abs(today['收盘'] - today['开盘'])
+        # ================= 核心判定区 =================
+        body = abs(today['收盘'] - today['开盘'])
         total_len = today['最高'] - today['最低'] + 0.00001 
         upper_shadow = today['最高'] - max(today['收盘'], today['开盘'])
         
@@ -43,11 +44,14 @@ def analyze_stock(stock):
         
         if is_big_drop or is_long_shadow:
             reasons.append("K线破位(大阴线/长上影)")
+            
         if today['MFI'] > 80: 
             reasons.append(f"资金过热(MFI:{today['MFI']:.1f})")
+            
         if today['最高'] > today['UPPER'] and today['收盘'] < today['UPPER']:
             reasons.append("布林带上轨压制")
             
+        # 综合判定：只要满足上面真正的风险条件之一，就报警
         if len(reasons) >= 1:
             return f"🔴 **{stock}** 触发风险：{' | '.join(reasons)}"
         else:
